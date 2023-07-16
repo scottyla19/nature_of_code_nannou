@@ -1,0 +1,61 @@
+[package]
+name = "nature-of-code"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+nannou = "0.18.1"
+rand = "0.8.5" 
+
+[workspace]
+members=[
+    "ecosystem",
+]
+
+
+# Chapter 1 Vectors
+[[example]]
+name = "example_1_2"
+path = "examples/ch_01/example_1_2.rs"
+
+[[example]]
+name = "example_1_5"
+path = "examples/ch_01/example_1_5.rs"
+
+[[example]]
+name = "example_1_6"
+path = "examples/ch_01/example_1_6.rs"
+
+[[example]]
+name = "example_1_7"
+path = "examples/ch_01/example_1_7.rs"
+
+[[example]]
+name = "example_1_8"
+path = "examples/ch_01/example_1_8.rs"
+
+[[example]]
+name = "example_1_9"
+path = "examples/ch_01/example_1_9.rs"
+
+[[example]]
+name = "example_1_10"
+path = "examples/ch_01/example_1_10.rs"
+
+[[example]]
+name = "example_1_11"
+path = "examples/ch_01/example_1_11.rs"
+
+[[example]]
+name = "exercise_1_3_3D"
+path = "exercises/ch_01/exercise_1_3_3d.rs"
+
+[[example]]
+name = "exercise_1_5"
+path = "exercises/ch_01/exercise_1_5.rs"
+
+[[example]]
+name = "exercise_1_6"
+path = "exercises/ch_01/exercise_1_6.rs"
