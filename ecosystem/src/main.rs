@@ -27,7 +27,8 @@ struct Model{
     frogs: Vec<Frog>,
     fishes: Vec<Fish>,
     flys: Vec<Fly>,
-    snakes: Vec<Snake>
+    snakes: Vec<Snake>,
+    attractor: Attractor
 }
 
 fn main() {
@@ -64,14 +65,15 @@ fn model(app: &App) -> Model {
     for _ in 0..random_range(2, 10) {
         let x = random_range(rect.left(), rect.right());
         let y = random_range(rect.bottom(), rect.top());
-        d.push(Snake::from(vec2(x,y), &app.window_rect()));
+        d.push(Snake::from(vec2(x,y)));
     }
 
     Model {
         frogs: a,
         fishes: b,
         flys: c,
-        snakes: d
+        snakes: d,
+        attractor: Attractor::new(app.mouse.position())
     }
 }
 
@@ -79,19 +81,28 @@ fn model(app: &App) -> Model {
 fn update(app: &App, model: &mut Model, _update: Update) {
     let mouse = app.mouse.position();
     for f  in &mut model.frogs{
-        
         f.update( app.time);
+        f.check_edges(app.window_rect());
     }
     for f  in &mut model.fishes{
         f.update((app.elapsed_frames() as f64) * 0.03);
     }
     for f  in &mut model.flys{
-        let t = (app.elapsed_frames() as f64) * 0.03;
-        f.update(mouse, t);
+        // let t = (app.elapsed_frames() as f64) * 0.03;
+        model.attractor.set_location(mouse);
+        let force =  model.attractor.attract(f);
+        f.apply_force(force);
+        f.update();
+        f.check_edges(app.window_rect());
+
     }
-    for f  in &mut model.snakes{
-        
-        f.update( (app.elapsed_frames() as f64) * 0.03);
+    for s  in &mut model.snakes{
+        for fish in &model.fishes{
+            let force = fish.repel(s);
+            s.apply_force(force);
+        }
+        s.update();
+        s.check_edges(app.window_rect());
     }
 }
 

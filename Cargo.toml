@@ -14,7 +14,6 @@ members=[
     "ecosystem",
 ]
 
-
 # Chapter 1 Vectors
 [[example]]
 name = "example_1_2"
@@ -59,3 +58,33 @@ path = "exercises/ch_01/exercise_1_5.rs"
 [[example]]
 name = "exercise_1_6"
 path = "exercises/ch_01/exercise_1_6.rs"
+
+# Chapter 2
+[[example]]
+name = "exercise_2_01"
+path = "exercises/ch_02/exercise_2_01.rs"
+[[example]]
+name = "exercise_2_04"
+path = "exercises/ch_02/exercise_2_04.rs"
+[[example]]
+name = "exercise_2_06"
+path = "exercises/ch_02/exercise_2_06.rs"
+[[example]]
+name = "exercise_2_10"
+path = "exercises/ch_02/exercise_2_10.rs"
+
+[[example]]
+name = "example_2_01"
+path = "examples/ch_02/example_2_01.rs"
+[[example]]
+name = "example_2_02"
+path = "examples/ch_02/example_2_02.rs"
+[[example]]
+name = "example_2_04"
+path = "examples/ch_02/example_2_04.rs"
+[[example]]
+name = "example_2_05"
+path = "examples/ch_02/example_2_05.rs"
+[[example]]
+name = "example_2_06"
+path = "examples/ch_02/example_2_06.rs"

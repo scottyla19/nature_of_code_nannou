@@ -5,6 +5,8 @@ use nannou::noise::Perlin;
 pub trait UpdateDisplay{
     fn display(&self, draw: &Draw);
 }
+
+
 pub struct Frog{
     location: Vec2,
     velocity: Vec2,
@@ -47,6 +49,22 @@ impl Frog{
         self.velocity = self.velocity.clamp_length_max(self.top_speed);
         self.location += self.velocity;
     }
+    pub fn check_edges(&mut self, rect: Rect) {
+        if self.location.x > rect.right() {
+            self.location.x = rect.right();
+            self.velocity.x *= -1.0;
+        } else if self.location.x < rect.left() {
+            self.velocity.x *= -1.0;
+            self.location.x = rect.left();
+        }
+        if self.location.y < rect.bottom() {
+            self.velocity.y *= -1.0;
+            self.location.y = rect.bottom();
+        } else if self.location.y > rect.top() {
+            self.velocity.y *= -1.0;
+            self.location.y = rect.top();
+        } 
+    }
 }
 impl UpdateDisplay for Frog{
     fn display(&self, draw: &Draw){
@@ -65,6 +83,7 @@ pub struct Fish{
     velocity: Vec2,
     acceleration: Vec2,
     top_speed: f32,
+    mass: f32,
     rect: Rect
 }
 impl Fish{
@@ -78,6 +97,7 @@ impl Fish{
             velocity: velo, 
             acceleration: acc, 
             top_speed: speed ,
+            mass: 10.0,
             rect: *rect}
 
     }
@@ -108,10 +128,18 @@ impl Fish{
         let y_radius = self.rect.h()/2.0;
         ((x_diff * x_diff)/(x_radius *x_radius)) + ((y_diff * y_diff)/(y_radius * y_radius)) <= 1.0
     }
+
+    pub fn repel(&self, s:&Snake) -> Vec2{
+        let mut force = self.location - s.location; 
+        let mut d = force.length(); 
+        d = d.max(5.0).min(25.0); 
+        force = force.normalize(); 
+        let strength = -0.5 * ( self.mass * s.mass) / (d * d); 
+        force * strength
+    }
 }
 impl UpdateDisplay for Fish{
     fn display(&self, draw: &Draw){
-
         draw.ellipse()
         .xy(self.location)
         .w(32.0)
@@ -119,38 +147,61 @@ impl UpdateDisplay for Fish{
         .color(BLUE)
         .stroke(BLACK)
         .stroke_weight(2.0);
-        
-        
     }
-    
 }
 
 pub struct Fly{
     location: Vec2,
     velocity: Vec2,
     acceleration: Vec2,
-    top_speed: f32
+    mass: f32
 }
 impl Fly{
     pub fn from(location: Vec2) -> Self{
         let loc = location;
         let velo = vec2(0.0, 0.0);
         let acc =  vec2(0.0,0.0);
-        let speed = 5.0;
         Fly { 
             location: loc, 
             velocity: velo, 
             acceleration: acc, 
-            top_speed: speed }
+            mass: 5.0 }
 
     }
 
-    pub fn update(&mut self, mouse: Vec2, t:f64){
-        let noisy_step = map_range(Perlin::new().get([random_range(1.0, 10.0) as f64, t as f64]),1.0, 10.0,0.2,0.6);
-        self.acceleration = (mouse - self.location).normalize() * noisy_step as f32;
-        self.velocity += self.acceleration;       
-        self.velocity = self.velocity.clamp_length_max(self.top_speed);
+    // pub fn update(&mut self, mouse: Vec2, t:f64){
+        // let noisy_step = map_range(Perlin::new().get([random_range(1.0, 10.0) as f64, t as f64]),1.0, 10.0,0.2,0.6);
+        // self.acceleration = (mouse - self.location).normalize() * noisy_step as f32;
+        // self.velocity += self.acceleration;       
+        // self.velocity = self.velocity.clamp_length_max(self.top_speed);
+        // self.location += self.velocity;
+        
+    // }
+    pub fn update(&mut self){
+        self.velocity += self.acceleration; 
+        // self.velocity = self.velocity.clamp_length_max(self.top_speed);
         self.location += self.velocity;
+        self.acceleration *= 0.0;
+    }
+    pub fn apply_force(&mut self, force: Vec2){
+        self.acceleration += force/ self.mass;
+    }
+
+    pub fn check_edges(&mut self, rect: Rect) {
+        if self.location.x > rect.right() {
+            self.location.x = rect.right();
+            self.velocity.x *= -1.0;
+        } else if self.location.x < rect.left() {
+            self.velocity.x *= -1.0;
+            self.location.x = rect.left();
+        }
+        if self.location.y < rect.bottom() {
+            self.velocity.y *= -1.0;
+            self.location.y = rect.bottom();
+        } else if self.location.y > rect.top() {
+            self.velocity.y *= -1.0;
+            self.location.y = rect.top();
+        } 
     }
 }
 impl UpdateDisplay for Fly{
@@ -165,47 +216,81 @@ impl UpdateDisplay for Fly{
     }
     
 }
+pub struct Attractor{
+    location: Vec2,
+    mass: f32
+}
+impl Attractor{
+    pub fn new(loc: Vec2) -> Self{
+        Attractor { 
+            location: loc, 
+            mass: 10.0}
 
+    }
+    pub fn set_location(&mut self, loc: Vec2){
+        self.location = loc;
+    }
+
+    pub fn attract(&self, fly:&Fly) -> Vec2{
+        let mut force = self.location - fly.location; 
+        let mut d = force.length(); 
+        d = d.max(5.0).min(25.0); 
+        force = force.normalize(); 
+        let strength = ( self.mass * fly.mass) / (d * d); 
+        force * strength
+    }
+
+}
 pub struct Snake{
     pub location: Vec2,
     pub velocity: Vec2,
     pub acceleration: Vec2,
-    top_speed: f32,
-    rect: Rect
+    mass: f32
 }
 impl Snake{
-    pub fn from(location: Vec2, rect:&Rect) -> Self{
+    pub fn from(location: Vec2) -> Self{
         let loc = location;
         let velo = vec2(0.0, 0.0);
         let acc =  vec2(0.0,0.0);
-        let speed = 5.0;
         Snake { 
             location: loc, 
             velocity: velo, 
             acceleration: acc, 
-            top_speed: speed,
-            rect: *rect 
+            mass: 15.0
         }
 
     }
 
-    pub fn update(&mut self, t:f64){
-        let noisy_x = Perlin::new().get([random_range(0.0, 10.0) as f64, t as f64]) as f32;
-        let noisy_y = Perlin::new().get([random_range(0.0, 10.0) as f64, t as f64]) as f32; 
+    pub fn update(&mut self){
+        // let noisy_x = Perlin::new().get([random_range(0.0, 10.0) as f64, t as f64]) as f32;
+        // let noisy_y = Perlin::new().get([random_range(0.0, 10.0) as f64, t as f64]) as f32; 
 
-        self.acceleration = vec2(noisy_x, noisy_y);
+        // self.apply_force(vec2(noisy_x, noisy_y));
         self.velocity += self.acceleration; 
-       
-        if self.location.x > self.rect.right() || self.location.x < self.rect.left(){
-            self.velocity.x *= -1.0;
-        }
-        if self.location.y > self.rect.top() || self.location.y < self.rect.bottom(){
-            self.velocity.y *= -1.0;
-        }    
-
-        self.velocity = self.velocity.clamp_length_max(self.top_speed);
+        // self.velocity = self.velocity.clamp_length_max(self.top_speed);
         self.location += self.velocity;
+        self.acceleration *= 0.0;
+    }
 
+    pub fn apply_force(&mut self, force: Vec2){
+        self.acceleration += force/ self.mass;
+    }
+
+    pub fn check_edges(&mut self, rect: Rect) {
+        if self.location.x > rect.right() {
+            self.location.x = rect.right();
+            self.velocity.x *= -1.0;
+        } else if self.location.x < rect.left() {
+            self.velocity.x *= -1.0;
+            self.location.x = rect.left();
+        }
+        if self.location.y < rect.bottom() {
+            self.velocity.y *= -1.0;
+            self.location.y = rect.bottom();
+        } else if self.location.y > rect.top() {
+            self.velocity.y *= -1.0;
+            self.location.y = rect.top();
+        } 
     }
 }
 
